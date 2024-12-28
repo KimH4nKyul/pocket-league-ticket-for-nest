@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 지갑 테이블
+model Wallet {
+  id      Int @id @default(autoincrement())
+  userId  Int @unique
+  balance Int
+}
+
+// 지갑 사용 내역 테이블
+model WalletHistory {
+  id        Int             @id @default(autoincrement())
+  userId    Int
+  amount    Int
+  type      WalletUsageType @default(CHARGE)
+  createdAt DateTime        @default(now())
+}
+
+// 경기장 정보 테이블
+model Stadium {
+  id       Int    @id @default(autoincrement())
+  name     String
+  capacity Int
+}
+
+// 경기 개요 테이블
+model StadiumMatch {
+  id        Int      @id @default(autoincrement())
+  league    String
+  round     Int
+  stadium   Int
+  homeTeam  String
+  awayTeam  String
+  matchAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SeatPricingPolicy {
+  id      Int    @id @default(autoincrement())
+  stadium Int
+  zone    String
+  section String
+  seatNo  Int
+  price   Int
+}
+
+model SeatBooking {
+  stadiumId      Int
+  stadiumMatchId Int
+  seatId         Int
+  status         SeatBookingStatus @default(PENDING)
+  userId         Int
+  createdAt      DateTime
+
+  @@unique([stadiumId, stadiumMatchId, seatId, status])
+}
+
+// model SeatBooking { 
+//   concertId       Int
+//   concertOptionId Int
+//   concertSeatId   Int 
+//   userId          Int
+//   status          SeatBookingStatus @default(PENDING)
+//   createdAt       DateTime
+
+//   @@id([concertId, concertOptionId, concertSeatId, status])
+// }
+
+// model PendingSeatBooking { 
+//   concertId       Int
+//   concertOptionId Int
+//   concertSeatId   Int 
+//   userId          Int
+//   createdAt       DateTime  @default(now())
+
+//   @@id([concertId, concertOptionId, concertSeatId])
+// }
+
+// model SeatBooking { 
+//   concertId       Int 
+//   concertOptionId Int 
+//   concertSeatId   Int 
+//   userId          Int
+//   bookedAt        DateTime  @default(now())
+
+//   @@id([concertId, concertOptionId, concertSeatId, userId]) // 여러 사용자가 예약을 만들 수 있게 됨 
+//   @@id([concertId, concertOptionId, concertSeatId])  // 한 좌석에 대한 하나의 예약만 생성되어 중복을 예방함
+// }
+
+// 결제 내역 테이블 
+model PaymentHistory {
+  id        Int           @id @default(autoincrement())
+  target    Int // 결제품
+  payer     Int // 결제자
+  amount    Int
+  status    PaymentStatus @default(FAIL)
+  createdAt DateTime      @default(now())
+}
+
+enum SeatBookingStatus {
+  PENDING // 
+  CONFIRMED
+}
+
+enum PaymentStatus {
+  FAIL
+  REFUND
+  SUCCESS
+}
+
+enum WalletUsageType {
+  CHARGE
+  USE
+}
+
+// 대기열 테이블
+model WaitList {
+  id        Int      @id @default(autoincrement())
+  token     String
+  position  Int
+  issuedAt  DateTime
+  entryTime DateTime
+  exitTime  DateTime
+}

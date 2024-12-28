@@ -1,0 +1,54 @@
+version: '3.8'
+services:
+  redis:
+    image: 'redis:7.2.4-alpine'
+    container_name: redis
+    volumes:
+      - redis-data:/data
+      # - ./redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - '6379:6379'
+    # command: redis-server /usr/local/etc/redis/redis.conf
+
+  psql:
+    image: 'postgres:16-alpine'
+    container_name: psql
+    env_file:
+      - ./env/.env.psql
+    volumes:
+      - psql-data:/var/lib/postgresql/data
+      - ./env/create-database.sql:/docker-entrypoint-initdb.d/create-database.sql
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    container_name: ticket-server
+    env_file:
+      - .env.docker-compose.local
+    build:
+      context: .
+      target: development
+      dockerfile: Dockerfile
+    depends_on:
+      redis:
+        condition: service_started
+      psql:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - .:/app:ro
+      - /app/prisma
+      - /app/node_modules
+    ports:
+      - '3000:3000'
+    command: sh -c "npx prisma migrate deploy && npm run start:dev"
+
+volumes:
+  redis-data:
+  psql-data:

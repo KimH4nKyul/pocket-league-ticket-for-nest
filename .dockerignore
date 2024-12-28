@@ -1,0 +1,15 @@
+# folders
+dist/
+node_modules/
+.git/
+.github/
+env/
+scripts
+
+# files
+.gitignore.
+.dockerignore
+Dockerfile
+*.md
+*.sh
+*-docker-compose.yml

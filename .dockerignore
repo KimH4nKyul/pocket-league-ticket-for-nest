@@ -5,6 +5,8 @@ node_modules/
 .github/
 env/
 scripts
+.DS_Store/
+.idea/
 
 # files
 .gitignore.
